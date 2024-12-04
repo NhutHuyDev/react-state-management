@@ -1,11 +1,9 @@
-// import { useEffect } from "react";
-// import { usePokemon, PokemonProvider } from "./store"
-// import { getPageQuery } from "./pagination";
 import { useAtom, useAtomValue } from "jotai";
-import { Pokemon, searchAtom, sortedPokemonAtom } from "./store";
+import { Pokemon, searchAtom, sortedPokemonAtom, paginationAtom, pageAtom, allPokemonAtom } from "./store";
+import { useEffect } from "react";
+import { getPageQuery, setPageQuery } from "./pagination";
 
 function SearchBox() {
-  // const { search, setSearch } = usePokemon()
   const [search, setSearch] = useAtom(searchAtom);
 
   return (
@@ -19,38 +17,51 @@ function SearchBox() {
 }
 
 function PokemonList() {
-  const pokemon = useAtomValue(sortedPokemonAtom);
-  // const { pokemon, loaded, total, page, totalPages, nextPage, setPageInit } = usePokemon()
+  const [{ isFetched }] = useAtom(allPokemonAtom)
+  const pokemon = useAtomValue(sortedPokemonAtom)
+  const { totalPages, total } = useAtomValue(paginationAtom)
+  const [page, setPage] = useAtom(pageAtom)
 
-  // useEffect(() => {
-  //   if (totalPages < page && loaded) {
-  //     setPageInit()
-  //   }
-  // }, [page, totalPages])
+  const nextPage = (page: number, totalPages: number) => {
+    if (page + 1 > totalPages) {
+      setPage(1)
+      setPageQuery(1)
+    } else {
+      setPage(page + 1)
+      setPageQuery(page + 1)
+    }
+  }
 
-  // const { setPageState } = usePokemon()
+  useEffect(() => {
+    if (totalPages < page && isFetched) {
+      setPage(1)
+      setPageQuery(1)
+    }
+  }, [page, totalPages])
 
-  // useEffect(() => {
-  //   const handleQueryChange = () => {
-  //     const { page } = getPageQuery()
-  //     setPageState(page)
-  //   };
+  useEffect(() => {
+    const handleQueryChange = () => {
+      const { page } = getPageQuery()
+      setPage(page)
+    };
 
-  //   window.addEventListener("popstate", handleQueryChange);
+    window.addEventListener("popstate", handleQueryChange);
 
-  //   handleQueryChange();
+    handleQueryChange();
 
-  //   return () => {
-  //     window.removeEventListener("popstate", handleQueryChange);
-  //   };
-  // }, []);
+    return () => {
+      window.removeEventListener("popstate", handleQueryChange);
+    };
+  }, []);
 
   return (
     <>
-      {/* <div className="my-2 flex justify-between">
-        <div className="text-gray-700 italic cursor-pointer" onClick={() => { nextPage(page, totalPages) }}>Next - <span className="text-gray-500">{page}/{totalPages}</span></div>
+      <div className="my-2 flex justify-between">
+        <div className="text-gray-700 italic cursor-pointer"
+          onClick={() => { nextPage(page, totalPages) }}
+        >Next - <span className="text-gray-500">{page}/{totalPages}</span></div>
         <div className="text-gray-500 italic">Total {total}</div>
-      </div> */}
+      </div>
       <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-3">
         {pokemon.map((p: Pokemon) => (
           <li
@@ -72,14 +83,11 @@ function PokemonList() {
   );
 }
 
-
 function App() {
   return (
     <div className="mx-auto max-w-4xl">
-      {/* <PokemonProvider> */}
       <SearchBox />
       <PokemonList />
-      {/* </PokemonProvider> */}
     </div>
   )
 }

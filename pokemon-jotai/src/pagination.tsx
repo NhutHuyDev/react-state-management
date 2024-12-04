@@ -23,3 +23,8 @@ export const setPageQuery = (page: number) => {
     const newUrl = `${window.location.pathname}?${params.toString()}`
     window.history.pushState({}, "", newUrl)
 }
+
+export const calculateTotalPages = (n: number, itemsPerPage: number = 16): number => {
+    if (n <= 0) return 1;
+    return Math.ceil(n / itemsPerPage);
+};

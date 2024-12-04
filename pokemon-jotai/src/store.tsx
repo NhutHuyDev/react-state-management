@@ -1,64 +1,59 @@
-// import { atom } from "jotai";
-// import { atomWithQuery } from "jotai-tanstack-query";
-// import { getPageQuery } from "./pagination";
-// // import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
-// // import { getPageQuery, setPageQuery } from "./pagination";
+import { atom } from "jotai";
+import { atomWithQuery } from "jotai-tanstack-query";
+import { calculateTotalPages, getPageQuery, setPageQuery } from "./pagination";
 
-// export interface Pokemon {
-//     id: number;
-//     name: string;
-//     type: string[];
-//     hp: number;
-//     attack: number;
-//     defense: number;
-//     special_attack: number;
-//     special_defense: number;
-//     speed: number;
-// }
+export interface Pokemon {
+    id: number;
+    name: string;
+    type: string[];
+    hp: number;
+    attack: number;
+    defense: number;
+    special_attack: number;
+    special_defense: number;
+    speed: number;
+}
 
-// export const searchAtom = atom("");
+const filteredPokemon = (pokemon: Pokemon[], search: string) =>
+    pokemon.filter((p: Pokemon) => p.name.toLowerCase().includes(search))
 
-// const allPokemonAtom = atomWithQuery(() => ({
-//     queryKey: ['pokemon'],
-//     queryFn: () => fetch("/pokemon.json").then((res) => res.json()),
-//     initialData: []
-// }))
+const paginatedPokemon = (pokemon: Pokemon[], page: number) =>
+    pokemon.slice(0 + (page - 1) * 16, (page - 1) * 16 + 16)
 
-// export const pokemonAtom = atom((get, set) => {
-//     const search = get(searchAtom).toLowerCase();
-//     const { data: allPokemon } = get(allPokemonAtom);
-//     const filtered = allPokemon.filter((p: Pokemon) => p.name.toLowerCase().includes(search));
+const sortedPokemon = (pokemon: Pokemon[]) =>
+    pokemon.sort((a: Pokemon, b: Pokemon) => a.name.localeCompare(b.name))
 
-//     const total = filtered.length;
-//     const totalPages = ; // Giả sử mỗi trang hiển thị 16 Pokémon
+export const searchAtom = atom("");
 
-//     set(updatePaginationAtom, { total, totalPages });
+export const allPokemonAtom = atomWithQuery(() => ({
+    queryKey: ['pokemon'],
+    queryFn: () => fetch("/pokemon.json").then((res) => res.json()),
+    initialData: []
+}))
 
-//     return filtered
-// });
+const filteredPokemonAtom = atom((get) => {
+    const search = get(searchAtom).toLowerCase();
+    const allPokemon = get(allPokemonAtom);
+    return filteredPokemon(allPokemon.data, search);
+});
 
-// export const sortedPokemonAtom = atom((get) => {
-//     const pokemon = get(pokemonAtom);
-//     return pokemon.slice(0, 16).sort((a: Pokemon, b: Pokemon) => a.name.localeCompare(b.name));
-// });
+export const pageAtom = atom(getPageQuery().page);
 
-// export const paginationAtom = atom({
-//     total: 0,
-//     totalPages: 0,
-//     page: getPageQuery().page,
-// });
+export const sortedPokemonAtom = atom((get) => {
+    const filteredPokemon = get(filteredPokemonAtom);
+    const page = get(pageAtom);
+    return sortedPokemon(paginatedPokemon(filteredPokemon, page))
+});
 
-// export const updatePaginationAtom = atom(
-//     (get) => get(paginationAtom),
-//     (get, set, { total, totalPages }: { total: number; totalPages: number }) => {
-//         const current = get(paginationAtom);
-//         set(paginationAtom, {
-//             ...current,
-//             total,
-//             totalPages,
-//         });
-//     }
-// );
+export const paginationAtom = atom((get) => {
+    const filteredPokemon = get(filteredPokemonAtom);
+    const total = filteredPokemon.length
+    const totalPages = calculateTotalPages(total)
+    return {
+        total,
+        totalPages
+    }
+});
 
 // // type PokemonAction = { type: "SET_LOADING" } | { type: "SET_POKEMON", payload: Pokemon[] } | { type: "SET_SEARCH", payload: string } | { type: "SET_TOTAL", payload: number } | { type: "SET_TOTAL_PAGES", payload: number } | { type: "SET_PAGE", payload: number }
 
