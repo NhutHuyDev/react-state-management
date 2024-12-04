@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
-import { calculateTotalPages, getPageQuery, setPageQuery } from "./pagination";
+import { calculateTotalPages, getPageQuery } from "./pagination";
 
 export interface Pokemon {
     id: number;
